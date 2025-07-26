@@ -1,0 +1,34 @@
+---
+services:
+  traefik:
+    container_name: "traefik-rvProxy-0"
+    image: traefik:latest
+    ports:
+      - "80:80"
+      - "443:443"
+      # - "8080:8080"
+    environment:
+      # edit your zone:edit token in the .env file
+      # works for cloudflare only, for other LE providers see
+      # https://doc.traefik.io/traefik/https/acme/#providers
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./data/certs/:/var/traefik/certs/:rw
+    networks:
+      - frontend
+    restart: unless-stopped
+networks:
+  # <--
+  #   if you created a shared network already,
+  #   replace "frontend" with the network name
+  # -->
+  frontend:
+    external: true
+  # <--
+  #   otherwise uncomment switch to next network
+  # -->
+  # frontend:
+  #   name: "reverse-proxy_frontend"
+  #   driver: bridge

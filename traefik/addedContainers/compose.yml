@@ -1,0 +1,42 @@
+---
+services:
+  wiki:
+    container_name: "..."
+    image: ...
+    restart: unless-stopped
+    # <--
+    #   no need to publish ports,
+    #   this will be handeled by traefik with the label config below
+    # -->
+    # ports:
+    #   - 8080:943
+    #   - ...
+    # expose:
+    #   - 943
+    environment:
+      # - ...
+    volumes:
+      # - ...
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.<name>.entrypoints=websecure
+      # for alternative host rules see
+      # https://doc.traefik.io/traefik/routing/routers/#rule
+      - traefik.http.routers.<name>.rule=Host(`host-rule.yourdomain.tld`)
+      - traefik.http.routers.<name>.tls=true
+      # certresolver value MUST match the container name from the traefik config file
+      # certificatesResolvers.<certresolver>
+      - traefik.http.routers.<name>.tls.certresolver=cloudflare
+      - traefik.http.routers.<name>.service=wiki
+      # must match the exposed port of the container
+      # in this example this would be 943
+      - traefik.http.services.<name>.loadbalancer.server.port=
+    networks:
+      - frontend
+      - wiki
+networks:
+  # MUST join the reverse proxys network
+  frontend:
+    external: true
+  # (optional) add the default network for the container
+  wiki:
