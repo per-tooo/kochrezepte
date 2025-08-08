@@ -1,0 +1,36 @@
+---
+services:
+  pma:
+    container_name: "pma_pma-0"
+    image: phpmyadmin:latest
+    restart: unless-stopped
+    environment:
+      - PMA_HOST=mariadb
+      - TZ=Europe/Berlin
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.pma.entrypoints=websecure
+      - traefik.http.routers.pma.rule=Host(`pma.yourdomain.tld`)
+      - traefik.http.routers.pma.tls=true
+      - traefik.http.routers.pma.tls.certresolver=cloudflare
+      - traefik.http.routers.pma.service=pma
+      - traefik.http.services.pma.loadbalancer.server.port=80
+    networks:
+      - pma
+      - frontend
+  mariadb:
+    container_name: "pma_db-0"
+    image: mariadb
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWD}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./db:/var/lib/mysql:rw
+    networks:
+      - pma
+networks:
+  pma:
+    driver: bridge
+  frontend:
+    external: true
